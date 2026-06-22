@@ -1,4 +1,4 @@
-build_system.import os
+import os
 import requests
 import datetime
 
@@ -20,6 +20,14 @@ def generate_html(data):
     eth = data.get('ethereum', {'usd': 0, 'usd_24h_change': 0})
     sol = data.get('solana', {'usd': 0, 'usd_24h_change': 0})
 
+    btc_val = f"${btc['usd']:,}"
+    eth_val = f"${eth['usd']:,}"
+    sol_val = f"${sol['usd']:,}"
+    
+    btc_chg = f"{btc['usd_24h_change']:.2f}%"
+    eth_chg = f"{eth['usd_24h_change']:.2f}%"
+    sol_chg = f"{sol['usd_24h_change']:.2f}%"
+
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,24 +41,19 @@ def generate_html(data):
         .timestamp {{ font-size: 12px; color: #666; margin-bottom: 30px; }}
         .data-row {{ display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #eee; }}
         .asset {{ font-weight: bold; }}
-        .pos {{ color: #2ec4b6; }} .neg {{ color: #e71d36; }}
-        .monetization-box {{ margin-top: 30px; padding: 15px; background: #fdf0d5; border-radius: 4px; text-align: center; }}
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Micro-Data Aggregator</h1>
     <div class="timestamp">Last automated update: {current_time}</div>
-    <div class="data-row"><span class="asset">Bitcoin (BTC)</span><span>${btc['usd']:,} <span class="{"pos" if btc['usd_24h_change'] >= 0 else "neg"}">{btc['usd_24h_change']:.2f}%</span></span></div>
-    <div class="data-row"><span class="asset">Ethereum (ETH)</span><span>${eth['usd']:,} <span class="{"pos" if eth['usd_24h_change'] >= 0 else "neg"}">{eth['usd_24h_change']:.2f}%</span></span></div>
-    <div class="data-row"><span class="asset">Solana (SOL)</span><span>${sol['usd']:,} <span class="{"pos" if sol['usd_24h_change'] >= 0 else "neg"}">{sol['usd_24h_change']:.2f}%</span></span></div>
-    
-    <div class="monetization-box">
-        <p style="color: #888; margin: 0;">System Traffic Optimization Zone</p>
-    </div>
+    <div class="data-row"><span class="asset">Bitcoin (BTC)</span><span>{btc_val} <span>{btc_chg}</span></span></div>
+    <div class="data-row"><span class="asset">Ethereum (ETH)</span><span>{eth_val} <span>{eth_chg}</span></span></div>
+    <div class="data-row"><span class="asset">Solana (SOL)</span><span>{sol_val} <span>{sol_chg}</span></span></div>
 </div>
 </body>
 </html>"""
+
     with open(OUTPUT_FILE, "w") as f:
         f.write(html_content)
 
