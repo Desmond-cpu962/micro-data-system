@@ -7,7 +7,6 @@ API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,so
 
 def fetch_data():
     try:
-        # User-Agent header prevents standard automated API blocks
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
         response = requests.get(API_URL, headers=headers, timeout=10)
         if response.status_code == 200:
@@ -43,18 +42,19 @@ def generate_html(data):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
     <title>Micro-Data Metric Hub</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; margin: 0; }}
-        .container {{ max-width: 500px; width: 100%; background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3); border: 1px solid #334155; }}
+        .container {{ max-width: 500px; width: 100%; background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; }}
         h1 {{ font-size: 22px; color: #f1f5f9; margin: 0 0 6px 0; font-weight: 600; letter-spacing: -0.5px; }}
-        .timestamp {{ font-size: 12px; color: #94a3b8; margin-bottom: 24px; font-variant-numeric: tabular-nums; }}
+        .timestamp {{ font-size: 12px; color: #94a3b8; margin-bottom: 24px; }}
         .data-list {{ display: flex; flex-direction: column; gap: 12px; }}
         .data-row {{ display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #111827; border-radius: 12px; border: 1px solid #334155; }}
         .asset {{ font-weight: 500; color: #cbd5e1; }}
         .metrics {{ display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }}
-        .price {{ font-weight: 600; font-size: 16px; color: #ffffff; font-variant-numeric: tabular-nums; }}
-        .change {{ font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }}
+        .price {{ font-weight: 600; font-size: 16px; color: #ffffff; }}
+        .change {{ font-size: 13px; font-weight: 500; }}
     </style>
 </head>
 <body>
