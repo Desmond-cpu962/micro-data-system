@@ -10,6 +10,10 @@
         .container { max-width: 550px; width: 100%; background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; }
         h1 { font-size: 22px; color: #f1f5f9; margin: 0 0 4px 0; font-weight: 600; letter-spacing: -0.5px; }
         .timestamp { font-size: 11px; color: #94a3b8; margin-bottom: 24px; }
+        .earnings-card { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border: 1px solid #3b82f6; border-radius: 14px; padding: 20px; margin-bottom: 24px; text-align: center; }
+        .earnings-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; margin-bottom: 6px; font-weight: 600; }
+        .earnings-value { font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -1px; }
+        .earnings-status { font-size: 11px; color: #94a3b8; margin-top: 8px; }
         .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; margin: 20px 0 10px 0; font-weight: 700; }
         .data-list { display: flex; flex-direction: column; gap: 10px; }
         .data-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #111827; border-radius: 12px; border: 1px solid #334155; }
@@ -22,13 +26,19 @@
 <body>
 <div class="container">
     <h1>Multi-Market Metric Hub</h1>
-    <div class="timestamp">Last automated engine build: 2026-06-22 03:25:38 UTC</div>
+    <div class="timestamp">Last automated engine build: 2026-06-22 05:42:41 UTC</div>
     
+    <div class="earnings-card">
+        <div class="earnings-label">Bybit Live Account Equity Value</div>
+        <div class="earnings-value">$0.00</div>
+        <div class="earnings-status">● Waiting for Bybit API Key stream activation...</div>
+    </div>
+
     <div class="section-title">Digital Assets</div>
     <div class="data-list">
-        <div class="data-row"><span class="asset">Bitcoin (BTC)</span><div class="metrics"><span class="price">$64,198</span><span class="change" style="color: #ff3b30">-0.27%</span></div></div>
-        <div class="data-row"><span class="asset">Ethereum (ETH)</span><div class="metrics"><span class="price">$1,734.71</span><span class="change" style="color: #ff3b30">-0.19%</span></div></div>
-        <div class="data-row"><span class="asset">Solana (SOL)</span><div class="metrics"><span class="price">$73.75</span><span class="change" style="color: #00b060">+0.10%</span></div></div>
+        <div class="data-row"><span class="asset">Bitcoin (BTC)</span><div class="metrics"><span class="price">$64,202</span><span class="change" style="color: #ff3b30">-0.08%</span></div></div>
+        <div class="data-row"><span class="asset">Ethereum (ETH)</span><div class="metrics"><span class="price">$1,736.59</span><span class="change" style="color: #00b060">+0.22%</span></div></div>
+        <div class="data-row"><span class="asset">Solana (SOL)</span><div class="metrics"><span class="price">$73.96</span><span class="change" style="color: #00b060">+1.18%</span></div></div>
     </div>
 
     <div class="section-title">Macro Commodities</div>
