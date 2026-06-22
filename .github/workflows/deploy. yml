@@ -1,4 +1,4 @@
-Auto Update Micro System
+name: Auto Update Micro System
 
 on:
   schedule:
