@@ -1,15 +1,17 @@
 import os
 import requests
 import datetime
+import hmac
+import hashlib
+import time
 
 OUTPUT_FILE = "index.html"
 CRYPTO_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true"
-# Using an open alternative financial pricing service for macro commodities
 COMMODITY_URL = "https://api.exchangerate-api.com/v4/latest/USD"
 
 def fetch_crypto():
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(CRYPTO_URL, headers=headers, timeout=10)
         if response.status_code == 200:
             return response.json()
@@ -19,18 +21,51 @@ def fetch_crypto():
 
 def fetch_commodities():
     try:
-        # Pull global commodity base valuation ratios
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(COMMODITY_URL, headers=headers, timeout=10)
         if response.status_code == 200:
             rates = response.json().get("rates", {})
-            # Deriving approximate spot metrics based on standard market cross-rates if direct feed throttles
-            return {
-                "GOLD": rates.get("XAU", 0.00043), # Ounces per USD
-                "SILVER": rates.get("XAG", 0.034)
-            }
+            return {"GOLD": rates.get("XAU", 0.00043), "SILVER": rates.get("XAG", 0.034)}
     except Exception as e:
         print(f"Error fetching commodities: {e}")
+    return None
+
+def fetch_bybit_balance():
+    # Read the secure hidden keys from GitHub Environment Settings
+    api_key = os.environ.get("BYBIT_API_KEY")
+    secret_key = os.environ.get("BYBIT_SECRET_KEY")
+    
+    if not api_key or not secret_key:
+        print("Bybit API Keys missing from GitHub Settings. Displaying demo valuation mode.")
+        return None
+
+    try:
+        url = "https://api.bybit.com/v5/account/wallet-balance"
+        timestamp = str(int(time.time() * 1000))
+        recv_window = "5000"
+        query_string = "accountType=UNIFIED"
+        
+        # Build Bybit V5 Authentication Signature Securely
+        param_str = timestamp + api_key + recv_window + query_string
+        signature = hmac.new(bytes(secret_key, "utf-8"), bytes(param_str, "utf-8"), hashlib.sha256).hexdigest()
+        
+        headers = {
+            "X-BBI-APIKEY": api_key,
+            "X-BBI-SIGN": signature,
+            "X-BBI-TIMESTAMP": timestamp,
+            "X-BBI-RECEIVE-WINDOW": recv_window,
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(f"{url}?{query_string}", headers=headers, timeout=10)
+        if response.status_code == 200:
+            res_json = response.json()
+            list_data = res_json.get("result", {}).get("list", [])
+            if list_data:
+                # Return total equity asset valuation converted directly to USD equivalence
+                return float(list_data[0].get("totalEquity", 0.0))
+    except Exception as e:
+        print(f"Bybit connection error: {e}")
     return None
 
 def format_change(value):
@@ -40,10 +75,10 @@ def format_change(value):
     prefix = "+" if value >= 0 else ""
     return f"{prefix}{value:.2f}%", color
 
-def generate_html(crypto_data, commodity_data):
+def generate_html(crypto_data, commodity_data, wallet_balance):
     current_time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     
-    # Process Crypto
+    # Process market pricing variables
     btc = crypto_data.get('bitcoin', {'usd': 0, 'usd_24h_change': 0}) if crypto_data else {'usd': 0, 'usd_24h_change': 0}
     eth = crypto_data.get('ethereum', {'usd': 0, 'usd_24h_change': 0}) if crypto_data else {'usd': 0, 'usd_24h_change': 0}
     sol = crypto_data.get('solana', {'usd': 0, 'usd_24h_change': 0}) if crypto_data else {'usd': 0, 'usd_24h_change': 0}
@@ -52,16 +87,21 @@ def generate_html(crypto_data, commodity_data):
     eth_val, eth_chg, eth_color = f"${eth.get('usd', 0):,}", *format_change(eth.get('usd_24h_change'))
     sol_val, sol_chg, sol_color = f"${sol.get('usd', 0):,}", *format_change(sol.get('usd_24h_change'))
 
-    # Process Commodities (Converting pricing back to USD value per troy ounce)
     gold_inv = 1 / commodity_data.get("GOLD", 0.00043) if commodity_data and commodity_data.get("GOLD", 0) > 0 else 2325.50
     silver_inv = 1 / commodity_data.get("SILVER", 0.034) if commodity_data and commodity_data.get("SILVER", 0) > 0 else 29.40
-
-    # Fallbacks if remote rate structure shifts format
     if gold_inv > 5000 or gold_inv < 500: gold_inv = 2341.80
     if silver_inv > 100 or silver_inv < 5: silver_inv = 29.75
 
     gold_val, gold_chg, gold_color = f"${gold_inv:,.2f}", "+0.42%", "#00b060"
     silver_val, silver_chg, silver_color = f"${silver_inv:,.2f}", "-0.18%", "#ff3b30"
+
+    # Set display properties for Balance Data Tracker
+    if wallet_balance is None or wallet_balance == 0:
+        display_balance = "$0.00"
+        display_status = "Waiting for Bybit API Key stream activation..."
+    else:
+        display_balance = f"${wallet_balance:,.2f}"
+        display_status = "Connected Live to Bybit Security Protocol"
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -75,6 +115,10 @@ def generate_html(crypto_data, commodity_data):
         .container {{ max-width: 550px; width: 100%; background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; }}
         h1 {{ font-size: 22px; color: #f1f5f9; margin: 0 0 4px 0; font-weight: 600; letter-spacing: -0.5px; }}
         .timestamp {{ font-size: 11px; color: #94a3b8; margin-bottom: 24px; }}
+        .earnings-card {{ background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border: 1px solid #3b82f6; border-radius: 14px; padding: 20px; margin-bottom: 24px; text-align: center; }}
+        .earnings-label {{ font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; margin-bottom: 6px; font-weight: 600; }}
+        .earnings-value {{ font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -1px; }}
+        .earnings-status {{ font-size: 11px; color: #94a3b8; margin-top: 8px; }}
         .section-title {{ font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; margin: 20px 0 10px 0; font-weight: 700; }}
         .data-list {{ display: flex; flex-direction: column; gap: 10px; }}
         .data-row {{ display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #111827; border-radius: 12px; border: 1px solid #334155; }}
@@ -89,6 +133,12 @@ def generate_html(crypto_data, commodity_data):
     <h1>Multi-Market Metric Hub</h1>
     <div class="timestamp">Last automated engine build: {current_time}</div>
     
+    <div class="earnings-card">
+        <div class="earnings-label">Bybit Live Account Equity Value</div>
+        <div class="earnings-value">{display_balance}</div>
+        <div class="earnings-status">● {display_status}</div>
+    </div>
+
     <div class="section-title">Digital Assets</div>
     <div class="data-list">
         <div class="data-row"><span class="asset">Bitcoin (BTC)</span><div class="metrics"><span class="price">{btc_val}</span><span class="change" style="color: {btc_color}">{btc_chg}</span></div></div>
@@ -111,4 +161,5 @@ def generate_html(crypto_data, commodity_data):
 if __name__ == "__main__":
     crypto = fetch_crypto()
     commodities = fetch_commodities()
-    generate_html(crypto, commodities)
+    balance = fetch_bybit_balance()
+    generate_html(crypto, commodities, balance)
