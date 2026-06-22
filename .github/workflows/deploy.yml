@@ -23,7 +23,10 @@ jobs:
       run: pip install requests
 
     - name: Run Engine Script
-      run: python build_system.py
+      env:
+          BYBIT_API_KEY: ${{ secrets.BYBIT_API_KEY }}
+          BYBIT_SECRET_KEY: ${{ secrets.BYBIT_SECRET_KEY }}
+        run: python build_system.py
 
     - name: Commit and Push Updates
       run: |
